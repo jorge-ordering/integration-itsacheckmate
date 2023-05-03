@@ -1,0 +1,1 @@
+https://api.itsacheckmate.com/oauth/token?client_id=&client_secret=&code=464ac4b9de9bed11769b355ae20e8dff4ef690e716b6a35d002543b453a88bd9&redirect_uri=https://integrations.ordering.co/itsacheckmate/create_token.php?api_key=::&grant_type=authorization_code

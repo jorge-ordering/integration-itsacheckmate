@@ -1,0 +1,106 @@
+{
+    "name": "Its a Checkate Integration",
+    "key": "itsacheckmate_integration",
+    "description": "",
+    "version": "0.0.1",
+    "author": "Ordering (Jorge Diaz)",
+    "hooks": {
+    
+    },
+    "configs": [
+        {
+            "name": "Source Order",
+            "key": "source_order",
+            "description": "Source Order provided by Its a checkmate platform",
+            "default_value": "",
+            "public": false,
+            "type": 1,
+            "customizable": false,
+            "hidden": false,
+            "can_replaced_by_businesses": false,
+            "can_replaced_by_sites": false
+        },
+        {
+            "name": "API Key",
+            "key": "api_key",
+            "description": "API Key provided by Its a checkmate platform",
+            "default_value": "",
+            "public": false,
+            "type": 1,
+            "customizable": false,
+            "hidden": false,
+            "can_replaced_by_businesses": false,
+            "can_replaced_by_sites": false
+        },
+        {
+            "name": "API Secret",
+            "key": "api_secret",
+            "description": "API Key provided by Its a checkmate platform",
+            "default_value": "",
+            "public": false,
+            "type": 1,
+            "customizable": false,
+            "hidden": false,
+            "can_replaced_by_businesses": false,
+            "can_replaced_by_sites": false
+        },
+        {
+            "name": "App Client ID",
+            "key": "client_id",
+            "description": "App Client ID provided by Its a checkmate platform",
+            "default_value": "",
+            "public": false,
+            "type": 1,
+            "customizable": false,
+            "hidden": false,
+            "can_replaced_by_businesses": false,
+            "can_replaced_by_sites": false
+        },
+        {
+            "name": "App Client Secret",
+            "key": "client_secret",
+            "description": "App Client Secret provided by Its a checkmate platform",
+            "default_value": "",
+            "public": false,
+            "type": 1,
+            "customizable": false,
+            "hidden": false,
+            "can_replaced_by_businesses": false,
+            "can_replaced_by_sites": false
+        },
+        {
+            "name": "Development Mode",
+            "key": "developemt_mode",
+            "description": "Set The Development API insted of production",
+            "default_value": "1",
+            "public": false,
+            "type": 2,
+            "customizable": false,
+            "hidden": false,
+            "options": [
+                {
+                    "text": "YES",
+                    "value": "1"
+                },
+                {
+                    "text": "NO",
+                    "value": "0"
+                }
+            ],
+            "can_replaced_by_businesses": false,
+            "can_replaced_by_sites": false
+        },
+        {
+            "name": "Oauth Data",
+            "key": "oauth",
+            "description": "Oauth Data (Do not Touch)",
+            "default_value": "",
+            "public": false,
+            "type": 1,
+            "customizable": false,
+            "hidden": false,
+            "can_replaced_by_businesses": true,
+            "can_replaced_by_sites": false
+        }
+    ]
+}

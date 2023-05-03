@@ -1,0 +1,428 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Authorize Ordering</title>
+    <link rel="icon" href="./favicon.ico">
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap@4.4.1/dist/css/bootstrap.min.css"
+        integrity="sha384-Vkoo8x4CGsO3+Hhxv8T/Q5PaXtkKtu6ug5TOeNV6gBiFeWPGFN9MuhOf23Q9Ifjh" crossorigin="anonymous" />
+    <link rel="stylesheet" type="text/css" href="./style.css">
+    <link rel="stylesheet" type="text/css" href="./style2.css">
+</head>
+
+<body>
+    <script src="https://unpkg.com/vue@next"></script>
+    <div id="app"></div>
+    <script>
+        // const mainUrl = "https://3cde-152-201-174-69.ngrok.io/plugins/itsacheckmate"
+        // const mainUrl = "http://localhost:9191/plugins/itsacheckmate"
+        const mainUrl = "https://integrations.ordering.co/itsacheckmate"
+        const app = Vue.createApp({
+            data() {
+                return {
+                    data: {
+                        email: "",
+                        project: "",
+                        password: "",
+                        code: "",
+                        sandbox: true,
+                        token: "",
+                        oauth: null,
+                        config_id: null,
+                        business_id: null,
+                        location: {
+                            name: "",
+                            address: "",
+                            city: ""
+                        },
+                    },
+                    step: 0,
+                    from_step: 1,
+                    code_generated: false,
+                    error: false,
+                    loading: false,
+                    businesses: [
+                        {
+                            name: "oso"
+                        },
+                        {
+                            name: "trigre"
+                        }, {
+                            name: "leon"
+                        },
+                    ],
+                    search: "",
+                    error_message: "error",
+                };
+            },
+            methods: {
+                send: function () {
+                    console.log(this.data);
+                    var errors = [];
+                    if (!this.data.email) {
+                        errors.push("Required email");
+                    }
+                    if (!this.data.project) {
+                        errors.push("Required Project");
+                    }
+                    if (!this.data.password) {
+                        errors.push("Required Password");
+                    }
+                    if (errors.length > 0) {
+                        this.error = true;
+                        this.error_message = errors.join(", ");
+                        return;
+                    }
+                    var isSanbox = this.data.sandbox ? 1 : 0;
+                    // var url = 'https://integrations.ordering.co/itsacheckmate/authorize.php';
+                    var url = mainUrl + '/authorizeOTP.php';
+                    var body = {
+                        email: this.data.email,
+                        project: this.data.project,
+                        password: this.data.password,
+                        sandbox: this.data.sandbox,
+                        code: this.data.code
+                    };
+                    // console.log(url);
+                    // console.log(this.data);
+                    fetch(url, {
+                        redirect: 'follow',
+                        method: 'POST',
+                        body: JSON.stringify(body)
+                    }).then(function (response) {
+                        // console.log(response);
+                        return response.json();
+                    }).then(function (data) {
+                        console.log(data);
+                        if (data.error) {
+                            app._instance.data.error_message = data.result
+                            app._instance.data.error = true
+                            return;
+                        }
+                        // fetch(`https://apiv4.ordering.co/v400/en/${data.result.project}/business?params=id,name&mode=dashboard`, {
+                        //     headers: {
+                        //         'authorization': "Bearer " + data.result.token
+                        //     }
+                        // })
+                        //     .then(function (response) {
+                        //         return response.json();
+                        //     })
+                        //     .then(function (data) {
+
+                        //         console.log(data)
+                        //     })
+                        app._instance.data.data.token = data.result.token
+                        app._instance.data.data.oauth = data.result.oauth
+                        app._instance.data.data.config_id = data.result.config_id
+                        app._instance.data.data.location = data.result.location
+                        app._instance.data.step = 1
+                        // window.location.href = `http://app.tryordering.com?token=${data.result.token}&project=${data.result.project}`;
+                    }).catch(function (err) {
+                        console.info(err);
+                    });
+                },
+                clearerror: function () {
+                    this.error = false;
+                    this.error_message = "error";
+                },
+                getBusiness: function () {
+                    fetch(`https://apiv4.ordering.co/v400/en/${this.data.project}/business?params=id,name,address&mode=dashboard`, {
+                        headers: {
+                            'authorization': "Bearer " + this.data.token
+                        }
+                    })
+                        .then(function (response) {
+                            return response.json();
+                        })
+                        .then(function (data) {
+                            app._instance.data.businesses = data.result
+                            app._instance.data.step = 2
+                            console.log(data)
+                        })
+                    this.clearerror()
+                },
+                connect: function () {
+                    // console.log(this.data.business_id)
+                    fetch(`https://apiv4.ordering.co/v400/en/${this.data.project}/business/${this.data.business_id}`, {
+                        method: 'POST',
+                        headers: {
+                            'authorization': "Bearer " + this.data.token,
+                            'Content-Type': 'application/json'
+                        },
+                        body: JSON.stringify({
+                            external_id: this.data.location.id
+                        })
+                    }).then(function (response) {
+                        return response.json();
+                    }).then(function (response) {
+                        var sync_url = mainUrl + '/sync_location.php';
+                        var body_sync = {
+                            location_id: app._instance.data.data.location.id,
+                            project: app._instance.data.data.project,
+                            token: app._instance.data.data.token
+                        };
+                        fetch(sync_url, {
+                            redirect: 'follow',
+                            method: 'POST',
+                            headers: {
+                                'authorization': "Bearer " + app._instance.data.data.token,
+                                'Content-Type': 'application/json'
+                            },
+                            body: JSON.stringify(body_sync)
+                        }).then(function (response) {
+                            return response.json();
+                        }).then(function (response) {
+                            var url = mainUrl + '/sync_menu.php?project=' + app._instance.data.data.project;
+                            var body = {
+                                location_id: app._instance.data.data.location.id,
+                            };
+                            fetch(url, {
+                                redirect: 'follow',
+                                method: 'POST',
+                                headers: {
+                                    'authorization': "Bearer " + app._instance.data.data.token,
+                                    'Content-Type': 'application/json'
+                                },
+                                body: JSON.stringify(body)
+                            })
+                        })
+                    })
+                    fetch(`https://apiv4.ordering.co/v400/en/${this.data.project}/business/${this.data.business_id}/configs/${this.data.config_id}`, {
+                        method: 'PUT',
+                        headers: {
+                            'authorization': "Bearer " + this.data.token,
+                            'Content-Type': 'application/json'
+                        },
+                        body: JSON.stringify({
+                            value: JSON.stringify(this.data.oauth)
+                        })
+                    })
+                        .then(function (response) {
+                            return response.json();
+                        })
+                        .then(function (data) {
+                            app._instance.data.step = 3
+                        })
+                },
+                goDashboard: function () {
+                    window.location.href = `http://app.tryordering.com?token=${this.data.token}&project=${this.data.project}`;
+                },
+                createStore: function () {
+                    this.clearerror
+                    this.from_step = 2;
+                    var url = mainUrl + '/create_store.php';
+                    var body = {
+                        project: this.data.project,
+                        sandbox: this.data.sandbox,
+                        location: this.data.location,
+                        token: this.data.token,
+                        oauth: this.data.oauth,
+                        config_id: this.data.config_id,
+                    };
+                    fetch(url, {
+                        redirect: 'follow',
+                        method: 'POST',
+                        body: JSON.stringify(body)
+                    }).then(function (response) {
+                        // console.log(response);
+                        return response.json();
+                    }).then(function (data) {
+                        if (data.error) {
+                            app._instance.data.error_message = data.result
+                            app._instance.data.error = true
+                            return;
+                        }
+                        console.log(data)
+                        app._instance.data.step = 3
+                    })
+                },
+                generateCode: function () {
+                    var errors = [];
+                    if (!this.data.email) {
+                        errors.push("Required email");
+                    }
+                    if (!this.data.project) {
+                        errors.push("Required Project");
+                    }
+                    if (errors.length > 0) {
+                        this.error = true;
+                        this.error_message = errors.join(", ");
+                        return;
+                    }
+                    fetch(`https://apiv4.ordering.co/v400/en/${this.data.project}/codes/generate`, {
+                        method: 'POST',
+                        headers: {
+                            'authorization': "Bearer " + this.data.token,
+                            'Content-Type': 'application/json'
+                        },
+                        body: JSON.stringify({
+                            channel: 1,
+                            email: this.data.email,
+                            size: 6,
+                            type: 4
+                        })
+                    }).then(function (response) {
+                        return response.json();
+                    }).then(function (data) {
+                        if (data.error) {
+                            app._instance.data.error_message = data.result
+                            app._instance.data.error = true
+                            return;
+                        } else {
+                            app._instance.data.code_generated = true
+                        }
+                    })
+                }
+            },
+            created() {
+                const params = new Proxy(new URLSearchParams(window.location.search), {
+                    get: (searchParams, prop) => searchParams.get(prop),
+                });
+                this.data.code = params.code;
+            },
+            computed: {
+                filteredBusiness: function () {
+                    console.log(this.businesses)
+                    const lowerSearch = this.search.toLowerCase();
+                    return this.businesses.filter(element => element.name.toLowerCase().indexOf(lowerSearch) != -1);
+                }
+            },
+            template: `
+            <div id="container">
+                <div class="loading" v-if="loading">
+                    <h1>LOADING<span class="dot1">.</span><span class="dot2">.</span><span class="dot3">.</span></h1>
+                </div>
+                <header class="page-header text-center" role="banner">
+                    <h1>Connect Ordering with ItsACheckmate</h1>
+                </header>
+                <div class="row">
+                    <div class="col-md-4">
+                        <div class="logo" style="margin-top: 30px; margin-bottom: 30px; text-align: center">
+                            <img style="max-width: 100%; max-height: 100px"
+                                src="https://images.ctfassets.net/2d5q1td6cyxq/5PVncvngzuMbsusO8PWIK1/0ba9bf0ad3077816a12052d4551b5e09/ItsaCheckmate-ICON-2020_09_14.png" />
+                        </div>
+                    </div>
+
+                    <div class="col-md-4">
+                        <div class="logo" style="margin-top: 25px; margin-bottom: 30px; text-align: center">
+                            <img style="max-width: 100%; max-height: 150px"
+                                src="https://www.securitiesfinancetimes.com/securitieslendingnews/images/WednesdayJuly2020221658316132.jpg" />
+                        </div>
+                    </div>
+
+                    <div class="col-md-4">
+                        <div class="logo" style="margin-top: 30px; margin-bottom: 30px; text-align: center">
+                            <img style="max-width: 100%; max-height: 100px"
+                                src="https://www.ordering.co/hs-fs/hubfs/Imported_Blog_Media/ordering-logo-h-200-11_wxb33g-1-2.png?width=200&amp;name=ordering-logo-h-200-11_wxb33g-1-2.png"
+                                alt="Ordering logo h 200 11 wxb33g 1 2.png?width=200&amp;name=ordering logo h 200 11 wxb33g 1 2" />
+                        </div>
+                    </div>
+                </div>
+                <div v-if="step === 0">
+                    <div class="form-group">
+                        <label for="project">Ordering Project</label>
+                        <input type="text" class="form-control" id="project" placeholder="Enter Project" v-model="data.project"
+                            @keyup="clearerror" :disabled=code_generated>
+                    </div>
+                    <div class="form-group">
+                        <label for="apiKey">Ordering User Email</label>
+                        <input type="text" class="form-control" id="apiKey" placeholder="Email" v-model="data.email"
+                            @keyup="clearerror" :disabled=code_generated>
+                    </div>
+                    <div class="form-group" v-if="code_generated">
+                        <label for="location_id">Ordering User Password</label>
+                        <input type="password" class="form-control" id="location_id" placeholder="password" v-model="data.password"
+                            @keyup="clearerror">
+                    </div>
+                    <div class="alert alert-success" role="alert" v-if="code_generated">
+                        <small class="form-text text-muted">
+                            An access code has been sent to you, please check your email to see the code.</small>
+                    </div>
+                    <br />
+                    <button type="button" class="btn btn-primary btn-lg btn-block" @click="generateCode"
+                        v-if="!code_generated">Generate Code</button>
+                    <button type="button" class="btn btn-secondary btn-lg btn-block" @click="code_generated = false"
+                        v-if="code_generated">Cancel</button>
+                    <button type="button" class="btn btn-primary btn-lg btn-block" @click="send"
+                        v-if="code_generated">Authorize</button>
+                </div>
+                <div v-if="step === 1 || step === 2">
+                        <small class="form-text text-muted" v-if="step === 1">
+                            The details for your locations in ItsaCheckmate are shown below. Please confirm if you would like to connect this locations to an existing Ordering.co location in your account, or to create a new location in Ordering.co</small>
+                        <table class="table table-bordered">
+
+                        <tbody>
+                            <tr>
+
+                                <td class="table-active">Business Name</td>
+                                <td>{{data.location.name}}</td>
+
+                            </tr>
+                            <tr>
+
+                                <td class="table-active">address</td>
+                                <td>{{data.location.address}}</td>
+
+                            </tr>
+                            <tr>
+
+                                <td class="table-active">City</td>
+                                <td>{{data.location.city}}</td>
+
+                            </tr>
+                        </tbody>
+                    </table>
+                </div>
+                <div v-if="step === 1">
+                    <button type="button" class="btn btn-primary btn-lg btn-block" @click="getBusiness">Connect existing
+                        store</button>
+                    <button type="button" class="btn btn-secondary btn-lg btn-block" @click="createStore">Create new store</button>
+                </div>
+                <div v-if="step === 2">
+                    <div class="form-group">
+                        <div class="form-group">
+                            <label for="search">Search busines by Name</label>
+                            <input type="text" class="form-control" id="search" placeholder="Search" v-model="search">
+                        </div>
+                        <div>
+                        <small class="form-text text-muted">
+                            Please select the location below from your Ordering.co account that corresponds to the location from ItsaCheckmate</small></div>
+                        <div class="form-group">
+                            <label for="businesses">Select One business</label>
+                            <select class="form-control" id="businesses" data-live-search="true" v-model="data.business_id">
+                                <option v-for="business in filteredBusiness" v-bind:value="business.id">{{business.name}} ({{business.address}})
+                                </option>
+                            </select>
+                        </div>
+                    </div>
+                    <br />
+                    <button type="button" class="btn btn-primary btn-lg btn-block" @click="connect">Connect</button>
+                </div>
+                <div v-if="step === 3">
+                    <div class="alert alert-success" role="alert">
+                        AUTHORIZED
+                        <span v-if="from_step === 1">Congratulations, a 0rdering.co store has been successfully connected to your location the ItsaCheckmate. Click below to go to your Ordering.co Dashboard</span>
+                        <span v-if="from_step === 2">Congratulations. We have created a new location in Ordering.co and have successfully connected it to your ItsaCheckmate location. Click below to go to your Ordering.co Dashboard</span>
+                    </div>
+                    <br />
+                    <button type="button" class="btn btn-primary btn-lg btn-block" @click="goDashboard">Go To dashboard</button>
+                </div>
+                <small id="emailHelp" class="form-text text-muted" v-if="step === 0">If you dont have an Ordering account: <a
+                        href="https://start-free.tryordering.com/" target="_blank">Create Acount.</a> Once your account has been
+                    created, create the project and wait for it to install and once the installation is finished, return to this page and continue with the process.</small>
+                <div class="alert alert-warning" role="alert" v-if="error">
+                    {{error_message}}
+                </div>
+            </div>
+
+            `
+        });
+
+        const vm = app.mount("#app");
+    </script>
+</body>
+
+</html>

@@ -1,0 +1,92 @@
+.loading {
+    position: absolute;
+    top: 50%;
+    left: 50%;
+    background-color: rgba(0, 0, 0, 0.3);
+    transform: translate(-50%, -50%);
+    height: 100%;
+    width: 100%;
+    display: flex;
+    z-index: 200;
+    justify-content: center;
+    align-items: center;
+} 
+
+.loading h1 {
+	font-size: 4rem;
+	text-align: center;
+	color: #000;
+	font-weight: 700;
+	text-transform: uppercase;
+	letter-spacing: 0.5rem;
+}
+
+@keyframes dot1 {
+	0%, 40%, 100% {
+		opacity: 1;
+		transform: translateX(0);
+	}
+	20% {
+		opacity: 0.5;
+		transform: translateX(-20px);
+	}
+	60% {
+		opacity: 0.5;
+		transform: translateX(20px);
+	}
+}
+
+@keyframes dot2 {
+	0%, 60%, 100% {
+		opacity: 0.5;
+		transform: translateX(0);
+	}
+	20% {
+		opacity: 1;
+		transform: translateX(-20px);
+	}
+	40% {
+		opacity: 1;
+		transform: translateX(20px);
+	}
+}
+
+@keyframes dot3 {
+	0%, 80%, 100% {
+		opacity: 0.5;
+		transform: translateX(0);
+	}
+	40% {
+		opacity: 1;
+		transform: translateX(-20px);
+	}
+	60% {
+		opacity: 1;
+		transform: translateX(20px);
+	}
+}
+
+.dot1 {
+	animation: dot1 1s infinite;
+}
+
+.dot2 {
+	animation: dot2 1s infinite;
+}
+
+.dot3 {
+	animation: dot3 1s infinite;
+}
+
+#container {
+    border: 1px solid rgba(0,0,0,.2);
+    border-radius: 6px;
+    -webkit-box-shadow: 0 3px 9px rgba(0,0,0,.5);
+    box-shadow: 0 3px 20px rgba(0,0,0,.3);
+    margin: 2em auto;
+    max-width: 600px;
+    outline: 0;
+    padding: 1em;
+    width: 80%;
+    position: relative;
+}

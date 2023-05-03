@@ -1,0 +1,1 @@
+https://sandbox-api.itsacheckmate.com/oauth/authorize?client_id=2edd625e7ce97ad961ebd450085960908a255280cd6281459a10af3f2b2a30a8&redirect_uri=https://integrations.ordering.co/itsacheckmate/create_token.php?api_key=demosv5:L3RveaMmCmJDL3FkNImcrqPuR_OrdAKaj9hDBjRfogHUTdiKtA_KkhX9vCzjiSJJ7:1&response_type=code&location_id=225500&scope=locations menus orders
