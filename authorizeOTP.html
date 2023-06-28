@@ -17,7 +17,7 @@
     <script src="https://unpkg.com/vue@next"></script>
     <div id="app"></div>
     <script>
-        // const mainUrl = "https://3cde-152-201-174-69.ngrok.io/plugins/itsacheckmate"
+        // const mainUrl = "https://8407-167-0-193-170.ngrok-free.app/plugins/itsacheckmate"
         // const mainUrl = "http://localhost:9191/plugins/itsacheckmate"
         const mainUrl = "https://integrations.ordering.co/itsacheckmate"
         const app = Vue.createApp({
@@ -88,6 +88,7 @@
                     };
                     // console.log(url);
                     // console.log(this.data);
+                    this.loading = true;
                     fetch(url, {
                         redirect: 'follow',
                         method: 'POST',
@@ -122,6 +123,8 @@
                         // window.location.href = `http://app.tryordering.com?token=${data.result.token}&project=${data.result.project}`;
                     }).catch(function (err) {
                         console.info(err);
+                    }).finally(function () {
+                        app._instance.data.loading = false
                     });
                 },
                 clearerror: function () {
@@ -129,6 +132,7 @@
                     this.error_message = "error";
                 },
                 getBusiness: function () {
+                    this.loading = true
                     fetch(`https://apiv4.ordering.co/v400/en/${this.data.project}/business?params=id,name,address&mode=dashboard`, {
                         headers: {
                             'authorization': "Bearer " + this.data.token
@@ -141,11 +145,14 @@
                             app._instance.data.businesses = data.result
                             app._instance.data.step = 2
                             console.log(data)
-                        })
+                        }).finally(function () {
+                            app._instance.data.loading = false
+                        });
                     this.clearerror()
                 },
                 connect: function () {
                     // console.log(this.data.business_id)
+                    this.loading = true
                     fetch(`https://apiv4.ordering.co/v400/en/${this.data.project}/business/${this.data.business_id}`, {
                         method: 'POST',
                         headers: {
@@ -187,7 +194,9 @@
                                     'Content-Type': 'application/json'
                                 },
                                 body: JSON.stringify(body)
-                            })
+                            }).finally(function () {
+                                app._instance.data.loading = false
+                            });
                         })
                     })
                     fetch(`https://apiv4.ordering.co/v400/en/${this.data.project}/business/${this.data.business_id}/configs/${this.data.config_id}`, {
@@ -222,6 +231,7 @@
                         oauth: this.data.oauth,
                         config_id: this.data.config_id,
                     };
+                    this.loading = true
                     fetch(url, {
                         redirect: 'follow',
                         method: 'POST',
@@ -237,7 +247,9 @@
                         }
                         console.log(data)
                         app._instance.data.step = 3
-                    })
+                    }).finally(function () {
+                        app._instance.data.loading = false
+                    });
                 },
                 generateCode: function () {
                     var errors = [];
@@ -252,6 +264,7 @@
                         this.error_message = errors.join(", ");
                         return;
                     }
+                    this.loading = true
                     fetch(`https://apiv4.ordering.co/v400/en/${this.data.project}/codes/generate`, {
                         method: 'POST',
                         headers: {
@@ -274,7 +287,9 @@
                         } else {
                             app._instance.data.code_generated = true
                         }
-                    })
+                    }).finally(function () {
+                        app._instance.data.loading = false
+                    });
                 }
             },
             created() {
@@ -296,7 +311,7 @@
                     <h1>LOADING<span class="dot1">.</span><span class="dot2">.</span><span class="dot3">.</span></h1>
                 </div>
                 <header class="page-header text-center" role="banner">
-                    <h1>Connect Ordering with ItsACheckmate</h1>
+                    <h1>Connect Ordering with ItsaCheckmate</h1>
                 </header>
                 <div class="row">
                     <div class="col-md-4">
