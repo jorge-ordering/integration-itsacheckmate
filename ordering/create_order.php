@@ -1,6 +1,5 @@
 <?php
 require_once('../config.php');
-
 header('Content-Type: application/json; charset=utf-8');
 header("Access-Control-Allow-Origin: *");
 
@@ -22,6 +21,8 @@ $language = 'en';
 $ordering_url = "{$api}/{$version}/{$language}/{$project}";
 $data = json_decode(request("{$ordering_url}/orders/{$data->id}?mode=dashboard", "GET", $headers_ordering, null));
 $data = $data->result;
+$business = json_decode(request("{$ordering_url}/business/{$data->business_id}?mode=dashboard", "GET", $headers_ordering, null));
+$business = $business->result;
 $addresses = json_decode(request("{$ordering_url}/users/{$data->customer_id}/addresses", "GET", $headers_ordering, null));
 $addresses = $addresses->result;
 $address = null;
@@ -32,9 +33,58 @@ foreach ($addresses as $_address) {
 }
 file_put_contents('data_order.json', json_encode($data));
 file_put_contents('address.json', json_encode($address));
-// debug($data);
+$location_id = null;
+if (strpos($business->slug, 'iacm_') !== false) {
+    $location_id = substr($business->slug, strlen('iacm_'));
+} else {
+    return;
+}
+$oauth_data = null;
+$config_id = null;
+foreach ($business->configs as $config) {
+    if ($config->key == 'itsacheckmate_integration_oauth') {
+        $oauth_data = $config->value;
+        $config_id =  $config->id;
+    }
+}
+echo $oauth_data;
+if ($oauth_data) {
+    //check valid
+    $oauth_data = json_decode($oauth_data, true);
+    $expirationTime = $oauth_data['created_at'] + $oauth_data['expires_in'];
+    $currentTimestamp = time();
+
+    if ($currentTimestamp < $expirationTime) {
+        // echo "El token es válido.";
+    } else {
+        // echo json_encode($configs);
+        $refresh_data = json_encode([
+            "client_id" => CLIENT_ID,
+            "client_secret" => CLIENT_SECRET,
+            "refresh_token" => $oauth_data['refresh_token'],
+            "grant_type" => 'refresh_token'
+        ]);
+        $token = requestWS('https://api.itsacheckmate.com/oauth/token', "POST", null, $refresh_data);
+        if ($token['info']['http_code'] != 200) {
+            echo 'erro';
+            error_response($token['response'], true, $token['info']['http_code']);
+            return;
+        }
+        // echo json_encode($token);
+        $oauth_data = json_decode(json_encode($token['response']), true);
+        $config_data = json_encode([
+            "value" => json_encode($token['response'])
+        ]);
+        $config = json_decode(request("{$ordering_url}/business/{$data->business_id}/configs/{$config_id}", "PUT", $headers_ordering, $config_data));
+        // echo json_encode($config);
+
+        //api.itsacheckmate.com/oauth/token
+    }
+} else {
+    return;
+}
 $location = [
-    "id" => 225500,
+    "id" => $location_id,
     "timezone" => "UTC"
 ];
 $customer = [
@@ -139,14 +189,16 @@ $order = json_encode([
 
 debug($order);
 
+// $headers = [
+//     "API_KEY: 4b55d857-07bb-437a-b3e1-38db5fae7d06",
+//     "API_SECRET: 8543c70d-7529-4183-8f64-849318b7f71f",
+// ];
 $headers = [
-    "API_KEY: 4b55d857-07bb-437a-b3e1-38db5fae7d06",
-    "API_SECRET: 8543c70d-7529-4183-8f64-849318b7f71f",
+    "Authorization: Bearer {$oauth_data['access_token']}"
 ];
-
-$inject = request('https://sandbox-api.itsacheckmate.com/third_party_orders/open_api/orders/gotchew', "POST", $headers, $order);
-
+$inject = request('https://api.itsacheckmate.com/api/v2/orders/gotchew', "POST", $headers, $order);
 file_put_contents("order.json", $order);
+file_put_contents("inject.json", $inject);
 
 // debug($inject);
 $inject = json_decode($inject);
