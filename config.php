@@ -3,8 +3,11 @@
 define("CHECKMATE_URL_DEVELOPMENT", "https://sandbox-api.itsacheckmate.com");
 define("CHECKMATE__URL_PRODUCTION", "https://api.itsacheckmate.com");
 define("INTEGRATION_URL", "https://integrations.ordering.co/itsacheckmate");
+// define("INTEGRATION_URL", "http://plugins/plugins/itsacheckmate");
 define("CLIENT_ID", "2edd625e7ce97ad961ebd450085960908a255280cd6281459a10af3f2b2a30a8");
 define("CLIENT_SECRET", "581b0cfab4956fb13936c4396a65a16b7577a63ec22cec3edc1ac40e5794fef5");
+// define("CLIENT_ID", "3f6fbcbdc0db27800e1dc62170396fa28af4774b318eaba33174151a78837d85");
+// define("CLIENT_SECRET", "60ca8e0dc1f30d85c2f4e875a6d6466bafb2b7cbf168b1749ba750b1795257b8");
 define("API_KEY", "4b55d857-07bb-437a-b3e1-38db5fae7d06");
 define("API_SECRET", "8543c70d-7529-4183-8f64-849318b7f71f");
 define("SOURCE", "gotchew");
@@ -13,9 +16,9 @@ define("SOURCE", "gotchew");
 
 // Ordering constants
 define("ORDERING_URL", "https://apiv4.ordering.co");
-define("ORDERING_URL_DEVELOPMENT", "https://21da-167-0-212-53.ngrok.io");
+define("ORDERING_URL_DEVELOPMENT", "http://api");
 define("API_VERSION", "v400");
-define("DEVELOPMENT", FALSE);
+define("DEVELOPMENT", TRUE);
 define("DEBUG", TRUE);
 
 #UTILS
@@ -99,27 +102,25 @@ function get_configs($project = null, $api_key = null, $options = [])
     $_configs->source_order = SOURCE;
     if ($_configs->oauth) {
         $oauth = $_configs->oauth;
-        // if (tokenExpired($oauth->created_at + $oauth->expires_in)) {
-        //     $params = new stdClass();
-        //     $params->client_id = $_configs->client_id;
-        //     $params->client_secret = $_configs->client_secret;
-        //     $params->refresh_token = $oauth->refresh_token;
-        //     $params->grant_type = 'refresh_token';
-        //     $url_params = [];
-        //     foreach ($params as $key => $value) {
-        //         array_push($url_params, "{$key}={$value}");
-        //     }
-        //     $url_params = implode('&', $url_params);
-        //     $development_mode = $_configs->development_mode == '1';
-        //     $url = getIntegrationUrl($development_mode) . "/oauth/token?{$url_params}";
-        //     $token = json_decode(request($url, 'POST', null, null));
-        //     $_configs->oauth = $token;
-        //     $ordering_url = "{$api}/{$version}/{$language}/{$project}";
-        //     $payload = [
-        //         "value" => json_encode($token)
-        //     ];
-        //     request($ordering_url . "/configs/{$_configs->oauth_id}", 'PUT', $headers, json_encode($payload));
-        // }
+        $expirationTime = $oauth->created_at + $oauth->expires_in;
+        $currentTimestamp = time();
+        if ($currentTimestamp > $expirationTime) {
+            $params = new stdClass();
+            $params->client_id = CLIENT_ID;
+            $params->client_secret = CLIENT_SECRET;
+            $params->refresh_token = $oauth->refresh_token;
+            $params->grant_type = 'refresh_token';
+            $development_mode = DEVELOPMENT;
+            $url = getIntegrationUrl($development_mode) . "/oauth/token";
+            $token = json_decode(request($url, 'POST', null, json_encode($params)));
+            echo json_encode($token);
+            $_configs->oauth = $token;
+            $ordering_url = "{$api}/{$version}/{$language}/{$project}";
+            $payload = [
+                "value" => json_encode($token)
+            ];
+            request($ordering_url . "/configs/{$_configs->oauth_id}", 'PUT', $headers, json_encode($payload));
+        }
     }
     return success_response($_configs);
 }

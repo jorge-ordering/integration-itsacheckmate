@@ -9,12 +9,14 @@ $version = API_VERSION;
 $language = 'en';
 $base_url = "{$api}/{$version}/{$language}/{$data->credentials->project}";
 // debug($base_url);
-$slug = $data->credentials->source_order."_".$data->credentials->location_id;
+$slug = "iacm_".$data->credentials->location_id;
 $key = $data->credentials->api_key;
 $headers = [];
 $headers[] = 'x-api-key: '.$key;
 $business = json_decode(request("{$base_url}/business/{$slug}?mode=dashboard", 'GET', $headers, null));
 
+// debug($business);
+// return;
 $business = $business->result;
 
 $ordering_products = [];
@@ -40,7 +42,7 @@ $alcoholics = [];
 $tax = 0;
 $business_schedule = default_schedule();
 $business_schedule_count = 0;
-foreach ($data->menus as $menu) {
+foreach ($data->menus->data as $menu) {
     $_menu = [
         "external_id" => $menu->id,
         "name" => $menu->name,
@@ -76,6 +78,8 @@ foreach ($data->menus as $menu) {
     $add_update = request($url, $method, $headers, json_encode($_menu));
     debug($add_update);
 }
+// debug($business_schedule);
+// return;
 
 if (!$business->zones) {
     $zone = '{"name":"EVERYWHERE","type":4,"data":"null","minimum":"0","price":"0","enabled":true,"schedule":"[{\"enabled\":true,\"lapses\":[{\"open\":{\"hour\":0,\"minute\":0},\"close\":{\"hour\":23,\"minute\":59}}]},{\"enabled\":true,\"lapses\":[{\"open\":{\"hour\":0,\"minute\":0},\"close\":{\"hour\":23,\"minute\":59}}]},{\"enabled\":true,\"lapses\":[{\"open\":{\"hour\":0,\"minute\":0},\"close\":{\"hour\":23,\"minute\":59}}]},{\"enabled\":true,\"lapses\":[{\"open\":{\"hour\":0,\"minute\":0},\"close\":{\"hour\":23,\"minute\":59}}]},{\"enabled\":true,\"lapses\":[{\"open\":{\"hour\":0,\"minute\":0},\"close\":{\"hour\":23,\"minute\":59}}]},{\"enabled\":true,\"lapses\":[{\"open\":{\"hour\":0,\"minute\":0},\"close\":{\"hour\":23,\"minute\":59}}]},{\"enabled\":true,\"lapses\":[{\"open\":{\"hour\":0,\"minute\":0},\"close\":{\"hour\":23,\"minute\":59}}]}]"}';

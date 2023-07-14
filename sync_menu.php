@@ -54,7 +54,7 @@ if ($errors) {
     return;
 }
 
-$development_mode = $configs->developemt_mode == '1';
+$development_mode = DEVELOPMENT;
 $business_update = [
     "project" => $project,
     "api_key" => $api_key,
@@ -63,7 +63,7 @@ $business_update = [
     "oauth" => $configs->oauth,
     "development_mode" => $development_mode
 ];
-// debug($business_update);
+debug($business_update);
 request(INTEGRATION_URL."/sync_business.php", "POST", null, json_encode($business_update));
 
 
@@ -75,20 +75,29 @@ request(INTEGRATION_URL."/sync_business.php", "POST", null, json_encode($busines
 $headers = [
     "Authorization: Bearer ".$configs->oauth->access_token,
 ];
-
+debug($headers);
 #Get the data of the menu for the location
 // $menus = json_decode(request(getIntegrationUrl($development_mode)."/third_party_orders/open_api/menu/{$data->location_id}/{$configs->source_order}", "GET", $headers, null));
+// debug(request(getIntegrationUrl($development_mode)."/api/v2/menu/{$configs->source_order}", "GET", $headers, null));
 $menus = json_decode(request(getIntegrationUrl($development_mode)."/api/v2/menu/{$configs->source_order}", "GET", $headers, null));
 debug($menus);
-debug(getIntegrationUrl($developemt_mode));
+// debug(getIntegrationUrl($development_mode));
 $embed_data = [];
+$deletes = [
+    "categories" => [],
+    "products" => [],
+    "extras" => [],
+    "options" => [],
+    "suboptions" => [],
+];
 $category_ids = [];
 $product_ids = [];
 $option_ids = [];
 $suboption_ids = [];
+$suspend_suboptions = [];
 $suboptions_updates = [];
+$cat_rank = 1;
 foreach ($menus->data as $menu) {
-    $cat_rank = 1;
     if ($menu->sections) {
         foreach ($menu->sections as $category) {
             $category_object = (object) [
@@ -178,11 +187,13 @@ foreach ($menus->data as $menu) {
                                     $suboption_object->subtoption_rank = $sub_rank++;
                                     $suboption_object->subtoption_price = $suboption->price;
                                     $suboption_object->subtoption_max = 99;
-                                    $suboption_object->allow_suboption_quantity = $menu->meta->allows_mod_quantities;
-                                    $suboption_object->limit_suboptions_by_max = $menu->meta->allows_mod_quantities;
+                                    $suboption_object->allow_suboption_quantity = $option->allow_modifier_multiple_quantity;
+                                    $suboption_object->limit_suboptions_by_max = $option->allow_modifier_multiple_quantity;
                                     array_push($embed_data, $suboption_object);
-                                    // array_push($suboption_ids, $suboption->id);
-
+                                    array_push($suboption_ids, $suboption_object->subtoption_id);
+                                    if ($suboption->suspend_until != 0) {
+                                        $suspend_suboptions[] = $suboption_object->subtoption_id;
+                                    }
                                     if ($suboption->modifier_groups) {
                                         foreach ($suboption->modifier_groups as $con_option) {
                                             $optionsub_object = clone $product_object;
@@ -205,10 +216,10 @@ foreach ($menus->data as $menu) {
                                                     $suboptionsub_object->subtoption_rank = $sub_rank++;
                                                     $suboptionsub_object->subtoption_price = $con_suboption->price;
                                                     $suboptionsub_object->subtoption_max = 99;
-                                                    $suboptionsub_object->allow_suboption_quantity = $menu->meta->allows_mod_quantities;
-                                                    $suboptionsub_object->limit_suboptions_by_max = $menu->meta->allows_mod_quantities;
+                                                    $suboptionsub_object->allow_suboption_quantity = $con_option->allow_modifier_multiple_quantity;
+                                                    $suboptionsub_object->limit_suboptions_by_max = $con_option->allow_modifier_multiple_quantity;
 
-                                                    // array_push($suboption_ids, $suboption->id);
+                                                    array_push($suboption_ids, $suboptionsub_object->subtoption_id);
                                                     array_push($embed_data, $suboptionsub_object);
                                                     $suboption_ids[$con_suboption->id.$con_option->id] = $suboption->suspend_until;
 
@@ -252,95 +263,55 @@ $version = API_VERSION;
 $language = 'en';
 $ordering_url = "{$api}/{$version}/{$language}/{$project}";
 
-$slug = $configs->source_order."_".$data->location_id;
+$slug = "iacm_".$data->location_id;
 $business = json_decode(request("{$ordering_url}/business/{$slug}?mode=dashboard", 'GET', $headers, null));
 $business = $business->result;
 
-foreach ($business->categories as $category) {
-    $category_object = (object) [
-        //Business
-        "busines_id" => $data->location_id,
-        //Category
-        "category_id" => $category->external_id,
-        "category_parent_id" => null,
-        "category_name" => $category->name,
-        "category_slug" => $category->slug,
-        "category_description" => $category->description,
-        "category_image" => "",
-        "category_rank" => $category->rank,
-        "category_enabled" => in_array($category->external_id, $category_ids),
-        //Product
-        "product_id" => '',
-        "product_name" => '',
-        "product_price" => '',
-        "product_description" => '',
-        "product_slug" => '',
-        "product_enabled" => '',
-        "product_images" => '',
-        "product_rank" => '',
-        "product_maximum_per_order" => '',
-        "product_calories" => '',
-        //Extra
-        "extra_id" => '',
-        "extra_name" => '',
-        "extra_rank" => '',
-        //Option
-        "option_id" => '',
-        "option_name" => '',
-        "option_image" => '',
-        "option_min" => '',
-        "option_max" => '',
-        "option_rank" => '',
-        //Suboption
-        "subtoption_id" => '',
-        "subtoption_name" => '',
-        "subtoption_price" => '',
-        "subtoption_max" => '',
-        "subtoption_rank" => '',
-        "subtoption_preselected" => '',
-        //contitions
-        "condition_option_id" => '',
-        "condition_suboption_id" => '',
 
-        "allow_suboption_quantity" => '',
-        "limit_suboptions_by_max" => '',
-    ];
-    if (!in_array($category->external_id, $category_ids)) {
-        array_push($embed_data, $category_object);
+//START DATA TO DELETE
+foreach ($business->categories as $category) {
+    $found_category = in_array($category->external_id, $category_ids);
+    if (!$found_category) {
+        $deletes["categories"][] = $category->id;
+        request("{$ordering_url}/business/{$business->id}/categories/{$category->id}", 'POST', $headers, json_encode(['enabled' => false]));
+        continue;
     }
     foreach ($category->products as $product) {
-        foreach ($product->extras as $extra) {
-            foreach ($extra->options as $option) {
-                foreach ($option->suboptions as $suboption) {
-                    // if ((!in_array($suboption->external_id, $suboption_ids) && $suboption->enabled) || (in_array($suboption->external_id, $suboption_ids) && !$suboption->enabled)) {
-                    //     $_update = (object) [
-                    //         "extra_id" => $extra->id,
-                    //         "option_id" => $option->id,
-                    //         "suboption_id" => $suboption->id,
-                    //         "enabled" => in_array($suboption->external_id, $suboption_ids)
-                    //     ];
-                    //     array_push($suboptions_updates, $_update);
-                    // }
-                    if ((!isset($suboption_ids[$suboption->external_id]) && $suboption->enabled)
-                        || (isset($suboption_ids[$suboption->external_id]) && $suboption_ids[$suboption->external_id] != 0 && $suboption->enabled)) {
-                        $_update = (object) [
-                            "extra_id" => $extra->id,
-                            "option_id" => $option->id,
-                            "suboption_id" => $suboption->id,
-                            "enabled" => false
-                        ];
-                        array_push($suboptions_updates, $_update);
-                    }
-                    if (isset($suboption_ids[$suboption->external_id]) && !$suboption->enabled && $suboption_ids[$suboption->external_id] == 0) {
-                        $_update = (object) [
-                            "extra_id" => $extra->id,
-                            "option_id" => $option->id,
-                            "suboption_id" => $suboption->id,
-                            "enabled" => true
-                        ];
-                        array_push($suboptions_updates, $_update);
-                    }
-                }
+        $found_product = in_array($product->external_id, $product_ids);
+        if (!$found_product) {
+            $deletes["products"][] = $product->id;
+            request("{$ordering_url}/business/{$business->id}/categories/{$category->id}/products/{$product->id}", 'DELETE', $headers, null);
+            continue;
+        }
+    }
+
+}
+foreach ($business->extras as $extra) {
+    // $found_extra = in_array($extra->external_id, $extra_ids);
+    // if (!$found_extra) {
+    //     $deletes["extras"][] = $extra->id;
+    //     request("{$ordering_url}/business/{$business->id}/extras/{$extra->id}", 'DELETE', $headers, null);
+    //     continue;
+    // }
+    foreach ($extra->options as $option) {
+        $found_option = in_array($option->external_id, $option_ids);
+        // if (!$found_option) {
+        //     $deletes["options"][] = $option->id;
+        //     // debug(request("{$ordering_url}/business/{$business->id}/extras/{$extra->id}/options/{$option->id}", 'DELETE', $headers, null));
+        //     continue;
+        // }
+        foreach ($option->suboptions as $suboption) {
+            $found_suboption = in_array($suboption->external_id, $suboption_ids);
+            $supend = in_array($suboption->external_id, $suspend_suboptions);
+            if  ($supend && $suboption->enabled) {
+                debug(request("{$ordering_url}/business/{$business->id}/extras/{$extra->id}/options/{$option->id}/suboptions/{$suboption->id}", 'PUT', $headers, json_encode(["enabled" => false])));
+            } else if (!$supend && !$suboption->enabled) {
+                debug(request("{$ordering_url}/business/{$business->id}/extras/{$extra->id}/options/{$option->id}/suboptions/{$suboption->id}", 'PUT', $headers, json_encode(["enabled" => true])));
+            }
+            if (!$found_suboption) {
+                $deletes["suboptions"][] = $suboption->id;
+                request("{$ordering_url}/business/{$business->id}/extras/{$extra->id}/options/{$option->id}/suboptions/{$suboption->id}", 'DELETE', $headers, null);
+                continue;
             }
         }
     }
@@ -432,7 +403,7 @@ foreach ($embed_data as $csv_data) {
         //Suboption
         $csv_data->subtoption_id,
         $csv_data->subtoption_name,
-        $csv_data->subtoption_price/100,
+        $csv_data->subtoption_price ? $csv_data->subtoption_price/100 : 0,
         $csv_data->subtoption_max,
         $csv_data->subtoption_rank,
         $csv_data->subtoption_preselected ? 1 : 0,
@@ -470,15 +441,16 @@ curl_setopt($ch, CURLOPT_POSTFIELDS, $post);
 curl_setopt($ch, CURLOPT_HTTPHEADER, $headers);
 $result=curl_exec ($ch);
 curl_close ($ch);
-debug($result);
+// debug($result);
 // unlink($file_name_with_full_path);
 
 $split_menu = [
     "menus" => $menus,
     "credentials" => $business_update
 ];
+// debug($split_menu);
 sleep(5);
-request(INTEGRATION_URL."/split_menu.php", "POST", null, json_encode($split_menu));
+debug(request(INTEGRATION_URL."/split_menu.php", "POST", null, json_encode($split_menu)));
 
 foreach ($suboptions_updates as $sub_update) {
    json_decode(request("{$ordering_url}/business/{$business->id}/extras/{$sub_update->extra_id}/options/{$sub_update->option_id}/suboptions/{$sub_update->suboption_id}", 'POST', $headers, json_encode($sub_update)));
