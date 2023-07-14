@@ -8,12 +8,12 @@
     $bearer = [
         'authorization: Bearer ' . $data->oauth->access_token,
     ];
-    $url = getIntegrationUrl($development_mode) . "/api/v2/activate";
+    $url = getIntegrationUrl($data->development_mode) . "/api/v2/activate";
     $activate = request($url, 'GET', $bearer, null);
-    debug($activate);
-    $url = getIntegrationUrl($development_mode) . "/api/v2/get_location";
+    // debug($activate);
+    $url = getIntegrationUrl($data->development_mode) . "/api/v2/get_location";
     $cur_location = json_decode(request($url, 'GET', $bearer, null));
-    debug($cur_location);
+    // debug($cur_location);
     // return;
     $headers = [
         'x-api-key: ' . $data->api_key,
@@ -30,7 +30,7 @@
     $business = $business->result;
     file_put_contents('curbus.json', json_encode($business));
 
-    debug($business);
+    // debug($business);
 
 
     $businesses_csv[0] = array(
@@ -48,12 +48,29 @@
         'Featured',
         'Enabled'
     );
+
+    $configs = json_decode(request("{$ordering_url}/configs?mode=dictionary", 'GET', $headers, null));
+    $gm_key = $configs->result->google_maps_api_key->value;
+
+    $main_address = "{$cur_location->data->address}, {$cur_location->data->city}, {$cur_location->data->state}";
+
+    $url_address = "https://maps.googleapis.com/maps/api/geocode/json?address=" . urlencode($main_address) . "&key={$gm_key}";
+
+    // Decodificar la respuesta JSON
     $location = [
         "lat" => 0,
         "lng" => 0,
         "zipcode" => -1,
         "zoom" => 15
     ];
+    $data_gm = json_decode(file_get_contents($url_address), true);
+    if ($data_gm['status'] === 'OK') {
+        $location_gm = $data_gm['results'][0]['geometry']['location'];
+        $location["lat"] = $location_gm['lat'];
+        $location["lng"] = $location_gm['lng'];
+    }
+
+
     $businesses_csv[1] = array(
         $data->location_id,
         ($business && $business->name) ? $business->name : $cur_location->data->name,
@@ -61,8 +78,8 @@
         ($business && $business->header) ? $business->header : '',
         "iacm_" . $data->location_id,
         ($business && $business->timezone) ? $business->timezone : 'UTC',
-        ($business && $business->address) ? $business->address : "{$cur_location->data->address}, {$cur_location->data->city}, {$cur_location->data->state}",
-        ($business && $business->location) ? json_encode($business->location) : json_encode($location),
+        "{$cur_location->data->address}, {$cur_location->data->city}, {$cur_location->data->state}",
+        json_encode($location),
         '',
         '',
         ($business && $business->cellphone) ? $business->cellphone : $cur_location->data->phone_number,
