@@ -449,7 +449,6 @@ $split_menu = [
     "credentials" => $business_update
 ];
 // debug($split_menu);
-file_put_contents('split_menu.json', json_encode($split_menu));
 sleep(5);
 debug(request(INTEGRATION_URL."/split_menu.php", "POST", null, json_encode($split_menu)));
 

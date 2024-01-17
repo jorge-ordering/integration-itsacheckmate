@@ -9,7 +9,7 @@ $data = json_decode(file_get_contents('php://input'));
 $project = $data->project;
 $code = $data->code;
 $sandbox = $data->sandbox;
-$development_mode = $sandbox ? true : false;
+$development_mode = DEVELOPMENT;
 $api = DEVELOPMENT ? ORDERING_URL_DEVELOPMENT : ORDERING_URL;
 $version = API_VERSION;
 $language = 'en';
@@ -49,8 +49,8 @@ if (!$plugin_installed) {
     // echo 'need to install';
     $plugin = request($ordering_url."/plugins", 'POST', $headers, json_encode(["url" => INTEGRATION_URL]));
     // echo $plugin;
+    sleep(2);
 }
-sleep(2);
 // file_put_contents('response.json', json_encode($_GET));
 //END LOGIN ORDERING
 

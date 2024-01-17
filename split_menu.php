@@ -10,13 +10,12 @@ $language = 'en';
 $base_url = "{$api}/{$version}/{$language}/{$data->credentials->project}";
 // debug($base_url);
 $slug = "iacm_".$data->credentials->location_id;
+
 $key = $data->credentials->api_key;
 $headers = [];
 $headers[] = 'x-api-key: '.$key;
 $business = json_decode(request("{$base_url}/business/{$slug}?mode=dashboard", 'GET', $headers, null));
 
-// debug($business);
-// return;
 $business = $business->result;
 
 $ordering_products = [];
@@ -78,8 +77,6 @@ foreach ($data->menus->data as $menu) {
     $add_update = request($url, $method, $headers, json_encode($_menu));
     debug($add_update);
 }
-// debug($business_schedule);
-// return;
 
 if (!$business->zones) {
     $zone = '{"name":"EVERYWHERE","type":4,"data":"null","minimum":"0","price":"0","enabled":true,"schedule":"[{\"enabled\":true,\"lapses\":[{\"open\":{\"hour\":0,\"minute\":0},\"close\":{\"hour\":23,\"minute\":59}}]},{\"enabled\":true,\"lapses\":[{\"open\":{\"hour\":0,\"minute\":0},\"close\":{\"hour\":23,\"minute\":59}}]},{\"enabled\":true,\"lapses\":[{\"open\":{\"hour\":0,\"minute\":0},\"close\":{\"hour\":23,\"minute\":59}}]},{\"enabled\":true,\"lapses\":[{\"open\":{\"hour\":0,\"minute\":0},\"close\":{\"hour\":23,\"minute\":59}}]},{\"enabled\":true,\"lapses\":[{\"open\":{\"hour\":0,\"minute\":0},\"close\":{\"hour\":23,\"minute\":59}}]},{\"enabled\":true,\"lapses\":[{\"open\":{\"hour\":0,\"minute\":0},\"close\":{\"hour\":23,\"minute\":59}}]},{\"enabled\":true,\"lapses\":[{\"open\":{\"hour\":0,\"minute\":0},\"close\":{\"hour\":23,\"minute\":59}}]}]"}';
@@ -88,7 +85,7 @@ if (!$business->zones) {
 }
 
 if (!$business->webhooks) {
-    $hook = '{"hook":"orders_register","url":"https://integrations.ordering.co/itsacheckmate/ordering/create_order.php?api_key='.$data->credentials->api_key.'&project='.$data->credentials->project.'"}';
+    $hook = '{"hook":"orders_register","url":"https://integrations.ordering.co/pro-itsacheckmate/ordering/create_order.php?api_key='.$data->credentials->api_key.'&project='.$data->credentials->project.'"}';
     $add_hook = request("{$base_url}/business/{$business->id}/webhooks", 'POST', $headers, $hook);
     debug($add_hook);
 

@@ -72,7 +72,7 @@
             "name": "Development Mode",
             "key": "developemt_mode",
             "description": "Set The Development API insted of production",
-            "default_value": "1",
+            "default_value": "0",
             "public": false,
             "type": 2,
             "customizable": false,

@@ -2,9 +2,9 @@
 #CONSTANS
 define("CHECKMATE_URL_DEVELOPMENT", "https://sandbox-api.itsacheckmate.com");
 define("CHECKMATE__URL_PRODUCTION", "https://api.itsacheckmate.com");
-define("INTEGRATION_URL", "https://integrations.ordering.co/itsacheckmate");
-define("CLIENT_ID", "2edd625e7ce97ad961ebd450085960908a255280cd6281459a10af3f2b2a30a8");
-define("CLIENT_SECRET", "581b0cfab4956fb13936c4396a65a16b7577a63ec22cec3edc1ac40e5794fef5");
+define("INTEGRATION_URL", "https://integrations.ordering.co/pro-itsacheckmate");
+define("CLIENT_ID", "3f6fbcbdc0db27800e1dc62170396fa28af4774b318eaba33174151a78837d85");
+define("CLIENT_SECRET", "60ca8e0dc1f30d85c2f4e875a6d6466bafb2b7cbf168b1749ba750b1795257b8");
 define("API_KEY", "4b55d857-07bb-437a-b3e1-38db5fae7d06");
 define("API_SECRET", "8543c70d-7529-4183-8f64-849318b7f71f");
 define("SOURCE", "gotchew");
@@ -15,8 +15,8 @@ define("SOURCE", "gotchew");
 define("ORDERING_URL", "https://apiv4.ordering.co");
 define("ORDERING_URL_DEVELOPMENT", "https://apiv4.ordering.co");
 define("API_VERSION", "v400");
-define("DEVELOPMENT", TRUE);
-define("DEBUG", TRUE);
+define("DEVELOPMENT", FALSE);
+define("DEBUG", FALSE);
 
 #UTILS
 

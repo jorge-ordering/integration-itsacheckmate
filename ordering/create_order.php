@@ -27,8 +27,6 @@ $data = json_decode(request("{$ordering_url}/orders/{$data->id}?mode=dashboard",
 $data = $data->result;
 $business = json_decode(request("{$ordering_url}/business/{$data->business_id}?mode=dashboard", "GET", $headers_ordering, null));
 $business = $business->result;
-// debug($business);
-// return;
 $addresses = json_decode(request("{$ordering_url}/users/{$data->customer_id}/addresses", "GET", $headers_ordering, null));
 $addresses = $addresses->result;
 $address = null;
@@ -39,7 +37,6 @@ foreach ($addresses as $_address) {
 }
 file_put_contents('data_order.json', json_encode($data));
 file_put_contents('address.json', json_encode($address));
-// debug($data);
 $location_id = null;
 if (strpos($business->slug, 'iacm_') !== false) {
     $location_id = substr($business->slug, strlen('iacm_'));
@@ -206,9 +203,11 @@ debug($order);
 $headers = [
     "Authorization: Bearer {$oauth_data['access_token']}"
 ];
-$inject = request('https://sandbox-api.itsacheckmate.com/api/v2/orders/gotchew', "POST", $headers, $order);
+$inject = request('https://api.itsacheckmate.com/api/v2/orders/gotchew', "POST", $headers, $order);
+echo $inject;
 
 file_put_contents("order.json", $order);
+file_put_contents("inject.json", $inject);
 
 // debug($inject);
 $inject = json_decode($inject);

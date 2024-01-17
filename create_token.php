@@ -23,7 +23,7 @@ $params = new stdClass();
 $params->client_id = $configs->client_id;
 $params->client_secret = $configs->client_secret;
 $params->code = $code;
-$params->redirect_uri = "https://integrations.ordering.co/itsacheckmate/create_token.php?api_key={$project}:{$api_key}:{$sandbox}";
+$params->redirect_uri = "https://integrations.ordering.co/pro-itsacheckmate/create_token.php?api_key={$project}:{$api_key}:{$sandbox}";
 $params->grant_type = 'authorization_code';
 
 $url_params = [];

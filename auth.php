@@ -14,7 +14,7 @@ $sandbox = $development_mode ? '1' : '0';
 // debug($configs);
 $params = new stdClass();
 $params->client_id = $configs->client_id;
-$params->redirect_uri = "https://integrations.ordering.co/itsacheckmate/create_token.php?api_key={$_GET['project']}:{$_GET['api_key']}:{$sandbox}";
+$params->redirect_uri = "https://integrations.ordering.co/pro-itsacheckmate/create_token.php?api_key={$_GET['project']}:{$_GET['api_key']}:{$sandbox}";
 $params->response_type = 'code';
 $params->location_id = $get['location_id'];
 $params->scope = 'locations menus orders';

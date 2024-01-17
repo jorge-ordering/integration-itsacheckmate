@@ -20,7 +20,7 @@
     <script>
         // const mainUrl = "https://8407-167-0-193-170.ngrok-free.app/plugins/itsacheckmate"
         // const mainUrl = "http://localhost:9191/plugins/itsacheckmate"
-        const mainUrl = "https://integrations.ordering.co/itsacheckmate"
+        const mainUrl = "https://integrations.ordering.co/pro-itsacheckmate"
         const app = Vue.createApp({
             data() {
                 return {
@@ -183,6 +183,7 @@
                         }).then(function (response) {
                             return response.json();
                         }).then(function (response) {
+                            app._instance.data.loading = false
                             var url = mainUrl + '/sync_menu.php?project=' + app._instance.data.data.project;
                             var body = {
                                 location_id: app._instance.data.data.location.id,
@@ -215,6 +216,7 @@
                         })
                         .then(function (data) {
                             app._instance.data.step = 3
+                            app._instance.data.loading = false
                         })
                 },
                 goDashboard: function () {
