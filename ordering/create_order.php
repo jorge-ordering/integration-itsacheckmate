@@ -1,5 +1,9 @@
 <?php
+
+use App\Models\Business;
+
 require_once('../config.php');
+
 header('Content-Type: application/json; charset=utf-8');
 header("Access-Control-Allow-Origin: *");
 
@@ -23,6 +27,8 @@ $data = json_decode(request("{$ordering_url}/orders/{$data->id}?mode=dashboard",
 $data = $data->result;
 $business = json_decode(request("{$ordering_url}/business/{$data->business_id}?mode=dashboard", "GET", $headers_ordering, null));
 $business = $business->result;
+// debug($business);
+// return;
 $addresses = json_decode(request("{$ordering_url}/users/{$data->customer_id}/addresses", "GET", $headers_ordering, null));
 $addresses = $addresses->result;
 $address = null;
@@ -33,12 +39,16 @@ foreach ($addresses as $_address) {
 }
 file_put_contents('data_order.json', json_encode($data));
 file_put_contents('address.json', json_encode($address));
+// debug($data);
 $location_id = null;
 if (strpos($business->slug, 'iacm_') !== false) {
     $location_id = substr($business->slug, strlen('iacm_'));
+    // echo "El número encontrado es: " . $numero;
 } else {
+    echo "El prefijo no está presente en la palabra.";
     return;
 }
+// return;
 $oauth_data = null;
 $config_id = null;
 foreach ($business->configs as $config) {
@@ -84,7 +94,7 @@ if ($oauth_data) {
     return;
 }
 $location = [
-    "id" => $location_id,
+    "id" => (int) $location_id,
     "timezone" => "UTC"
 ];
 $customer = [
@@ -104,7 +114,7 @@ foreach ($data->products as $product) {
     $item = [
         "name" => $product->name,
         "quantity" => $product->quantity,
-        "price" => $product->price,
+        "price" => $product->price*100,
         "special_request" => $product->comment,
         "id" => $product->external_id,
         "modifiers" => []
@@ -117,7 +127,7 @@ foreach ($data->products as $product) {
                 $modifier = [
                     "name" => $suboption->name,
                     "quantity" => $suboption->quantity,
-                    "price" => $suboption->price,
+                    "price" => $suboption->price*100,
                     "group_name" => $option->name,
                     "id" => explode('::::', $suboption->external_id)[0],
                     "parent" => explode('::::', $suboption->external_id)[1]
@@ -127,7 +137,7 @@ foreach ($data->products as $product) {
                 $modifier = [
                     "name" => $suboption->name,
                     "quantity" => $suboption->quantity,
-                    "price" => $suboption->price,
+                    "price" => $suboption->price*100,
                     "group_name" => $option->name,
                     "id" => $suboption->external_id,
                     "modifiers" => []
@@ -140,7 +150,7 @@ foreach ($data->products as $product) {
         array_push($main_modifiers[$sub_modifier["parent"]]["modifiers"],  [
             "name" => $sub_modifier["name"],
             "quantity" => $sub_modifier["quantity"],
-            "price" => $sub_modifier["price"],
+            "price" => $sub_modifier["price"] * 100,
             "group_name" => $sub_modifier["group_name"],
             "id" => $sub_modifier["id"],
         ]);
@@ -196,9 +206,9 @@ debug($order);
 $headers = [
     "Authorization: Bearer {$oauth_data['access_token']}"
 ];
-$inject = request('https://api.itsacheckmate.com/api/v2/orders/gotchew', "POST", $headers, $order);
+$inject = request('https://sandbox-api.itsacheckmate.com/api/v2/orders/gotchew', "POST", $headers, $order);
+
 file_put_contents("order.json", $order);
-file_put_contents("inject.json", $inject);
 
 // debug($inject);
 $inject = json_decode($inject);

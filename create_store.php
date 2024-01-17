@@ -15,14 +15,8 @@ $headers = [
 ];
 try {
     $business = json_decode(request("{$ordering_url}/business/iacm_{$data->location->id}?mode=dashboard", 'GET', $headers, null));
-    $business_error = $business->error;
-    if ($business->error) {
-        error_response($business->result, true);
-        return;
-    }
     $business = $business->result;
     if ($business) {
-        // error_response($business, true);
         error_response("Already exists a business asociated with this LOCATION ID, Select Connet existing store", true);
         return;
     }
@@ -119,5 +113,5 @@ try {
 } catch (Throwable $e) {
     file_put_contents('errorCreate.txt', $e->getMessage());
     // error_response($e->getMessage(), true);
-    print_r( $e->getMessage());
+    print_r($e->getMessage());
 }

@@ -13,3 +13,7 @@ if ($data->project && $data->location_id && $apiKeyOrdering) {
     sync_location_connection($data->location_id, $data->project, $apiKeyOrdering);
 }
 
+echo json_encode([
+    "error" => false,
+    "resul" => "OK"
+]);
