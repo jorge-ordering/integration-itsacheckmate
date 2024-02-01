@@ -102,7 +102,7 @@ $customer = [
     "address" => [
         "street" => $address ? "{$address->street_number} {$address->route}" : $data->customer->address,
         "city" => $address ? $address->city : $data->customer->address,
-        "state" => $address ? $address->state  : $data->customer->address,
+        "state" => $address ? getStateCode($address->state)  : $data->customer->address,
         "postal_code" => $address ? $address->zipcode  : $data->customer->zipcode,
     ]
 ];
@@ -156,7 +156,7 @@ foreach ($data->products as $product) {
     array_push($items, $item);
 }
 $meta = [
-    "id" => $data->id,
+    "id" => (string) $data->id,
     "type" => traduceIntegration("delivery:{$data->delivery_type}"),
     "notes" => $data->comment,
     "requested_at" => (in_array($data->delivery_type, [1, 2]) && $data->status == 13) ? (new DateTime($data->delivery_datetime_utc,  new DateTimeZone("UTC")))->format('c') : null,
